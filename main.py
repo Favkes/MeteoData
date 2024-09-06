@@ -5,23 +5,6 @@ import data_downl
 import data_analyser
 import math
 
-""" 
-    MAKE A SMALL FUNCTION THATLL MAKE THE BOUNDING BOX LARGER ENOUGH SO THAT
-    OBJECTS << IMAGE WON'T CONSTANTLY MATCH WITH OTHER OBJECTS
-    (SO BASICALLY LETS MAKE THE BOUNDING BOX A FIXED VALUE BELOW SOME POINT)
-    (BUT THEN PERHAPS DRAWING THE OBJECTS NEARBY COULD ALSO BE BENEFICIAL)
-    (CUZ OTHERWISE THE OBJECTS MAY STILL GET MIXED UP AND WITH EMPTY SURROUNDINGS)
-    (ITS REALLY EASY. ALSO!!!! START BY TRACKING THE   E N T I R E T Y   OF THE DATA)
-    (SO THAT WE GET THE GENERAL FEELING OF WHERE EACH OBJECT   S H O U L D   GET PLACED)
-    (NEXT. THEN MAKE STH THAT'LL MAKE A PROBABILITY MAP AROUND THAT AREA AND ADD IT)
-    (WITH THE MAP OF MATCHES. OR USE AN UNION. EITHER WAY, ITLL RETURN THE BEST MATCH.)
-"""
-
-""" 
-    WE ALSO!!!!! COULD QUANTIFY THE COLOR SPACE!!!!
-    IF WE CONVERT TO, FOR EXAMPLE, 8BIT COLORSPACE - ALL THE SMALL ERRORS WILL
-    BE GONE!!! >;DDD
-"""
 
 """
     We detect the objects via cv2-provided methods and then pass in regions in which
@@ -30,30 +13,24 @@ import math
 """
 
 """
-    We'll now have to create a uint32 numpy array with 3 channels, with the first 2 corresponding to
-    the shift vector's x and y values, and the third coordinate representing the change in area of an object.
-    WE MAY USE STANDARD UINT8 IF WE SCALE THE AREA CHANGE PROPORTIONALLY TO THE OBJ SIZE, SO BASICALLY USE %!!!
-    We then will have to probably use a gaussian of some sorts, or even some other algorithms, and
-    fill out the rest of the array so that we are then able to apply it as a vector field to an image
-    and deform it accordingly.
-    ALTERNATIVELY we could also create the same field, and then simply shift the individual objects
-    based on their current locations as well as scale them to match the area delta.
-    This however could result in some minor bugs, so as always, the best option would be to
-    apply BOTH methods and then use an intersection to sort out the simulation parts that are agreed on.
-
-    (SAVING THE DIFFERRENT UINT FORMATS IS POSSIBLE WITH .NPY!!!
-    https://numpy.org/doc/stable/reference/generated/numpy.save.html)
-
     !!! AT LINE 137 WE HAVE YET TO FIND A WAY OF COMPARING TWO dt OBJECT AREAS !!!
     ^^^ We'll most likely have to use a pass-on algorithm that'll calculate BOTH
         images' objects in one iteration, to then pass the second one as the first one to the next
         iteration and only have to calculate the second. ^^^
 """
+
 """
     We have got to create a special case for all the groups containing one singular
     vector. In that particular case, we should compare that vector with the average value
     of all vectors combined, instead of doing it locally within the group.
 """
+
+""" 
+    WE ALSO!!!!! COULD QUANTIFY THE COLOR SPACE!!!!
+    IF WE CONVERT TO, FOR EXAMPLE, 8BIT COLORSPACE - ALL THE SMALL ERRORS WILL
+    BE GONE!!! >;DDD
+"""
+
 
 
 
