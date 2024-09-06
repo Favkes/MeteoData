@@ -1,0 +1,42 @@
+
+body {
+    background-image: url('backgr1.gif');
+    background-repeat: no-repeat;
+    background-color: #040621;
+    background-size: 1700px;
+}
+h1 {
+    color: red;
+    font-size: 40px;
+}
+p {
+    color: white;
+    font-size: 32px;
+    margin-left: 20px;
+}
+a {
+    font-size: 30px;
+    hover: #d2b0f2;
+    margin-left: 40px;
+}
+a:link {
+    color: #EB3C6B;
+    background-color: transparent;
+    text-decoration: none;
+}
+a:hover {
+    color: #fff0c2;
+    background-color: transparent;
+}
+a:active {
+    color: #d2b0f2;
+}
+a:visited {
+    color: #EB3C6B;
+}
+a:visited:hover {
+    color: #fff0c2;
+}
+a:visited:active {
+    color: #d2b0f2;
+}
