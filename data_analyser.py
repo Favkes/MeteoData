@@ -82,14 +82,17 @@ def interpolate_vectors_by_nearest(mainvectors: np.array, height: int = 640, wid
     print(f'[DONE] Interpolating {height}x{width} by {mainvectors.shape[0]} values.')
     return field
 
+
 def gaussian_blur_channel(chnl, kernel_size: int = 25):
     return scpimg.gaussian_filter(chnl, sigma=(kernel_size, )*3)
+
 
 def apply_channel_separate_blur(arr):
     channels = np.dsplit(arr, arr.shape[-1])
     channels = list(map(gaussian_blur_channel, channels))
     arr = np.dstack(channels)
     return arr
+
 
 def conquer_area_from_main_vectors(
         data_handler: data_downl.DataHandler,
