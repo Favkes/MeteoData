@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import data_downl
+# import data_downl
 # import os
 import scipy.ndimage as scpimg
 from scipy.interpolate import NearestNDInterpolator
@@ -9,7 +9,6 @@ from scipy.interpolate import NearestNDInterpolator
 def create_bounds(bounding_img: np.array, pos: tuple[int, int], dim: tuple[int, int]) -> tuple:
     """ Returns a bounding box with twice as large dimensions and centered
         at the same spot, allowing for more efficient and accurate image recognition.
-
     """
     y, x = pos
     h, w = dim
@@ -82,8 +81,10 @@ def interpolate_vectors_by_nearest(mainvectors: np.array, height: int = 640, wid
     print(f'[DONE] Interpolating {height}x{width} by {mainvectors.shape[0]} values.')
     return field
 
-def gaussian_blur_channel(chnl, kernel_size: int = 25):
-    return scpimg.gaussian_filter(chnl, sigma=(kernel_size, )*3)
+
+def gaussian_blur_channel(channel_n, kernel_size: int = 25):
+    return scpimg.gaussian_filter(channel_n, sigma=(kernel_size, )*3)
+
 
 def apply_channel_separate_blur(arr):
     channels = np.dsplit(arr, arr.shape[-1])
@@ -91,8 +92,9 @@ def apply_channel_separate_blur(arr):
     arr = np.dstack(channels)
     return arr
 
+
 def conquer_area_from_main_vectors(
-        data_handler: data_downl.DataHandler,
+        data_path: str,
         shape: tuple[int, int],
         main_vectors: np.array):
     # - calc arr of distances from points (B-A)
@@ -116,8 +118,11 @@ def conquer_area_from_main_vectors(
     print('[DONE] Interpolating vectors by nearest.')
 
     output = main_vectors[indexes, 2:]  # <- original
+    output = output.astype(np.float32)
+
     # Blurring the borders to make the field much smoother:
     # output = apply_channel_separate_blur(output)
+
     output = output.swapaxes(0, 1)  # FOR WHATEVER REASON THE IMAGE IS TRANSPOSED ALONG Y=X
 
     """ Colormap representing the vector spread, useful for debugging! """
@@ -126,11 +131,14 @@ def conquer_area_from_main_vectors(
     colors = color_dict[indexes]
     colors = colors.swapaxes(0, 1)  # FOR WHATEVER REASON THE IMAGE IS TRANSPOSED ALONG Y=X
 
-    cv2.imwrite(f'{data_handler.directory}{data_handler.filename}colors(clear).png', colors)
+    # cv2.imwrite(f'{data_handler.directory}{data_handler.filename}colors(clear).png', colors)
+    cv2.imwrite(f'{data_path}colors(clear).png', colors)
 
     colors = apply_channel_separate_blur(colors)
+    output = apply_channel_separate_blur(output)
 
-    cv2.imwrite(f'{data_handler.directory}{data_handler.filename}colors(blur).png', colors)
+    # cv2.imwrite(f'{data_handler.directory}{data_handler.filename}colors(blur).png', colors)
+    cv2.imwrite(f'{data_path}colors(blur).png', colors)
 
     return output
 
@@ -152,42 +160,69 @@ def sort_point_groups(point_array: np.array, radius=5):
     radius_sqr = radius**2
     del radius
 
-    #   Initialisation:
+    # Pre-loop initialisation:
     group_tags = np.zeros((point_array.shape[0], ), np.int32) - 1
     group_phonebooks = {}
 
+    for point_number, current_point in enumerate(point_array):
+        #   Instruction #1 (is or not in group):
+        if group_tags[point_number] == -1:
+            group_tags[point_number] = point_number
+            group_phonebooks[point_number] = [point_number]
+        group_tag = group_tags[point_number]
 
-    for number, current_point in enumerate(point_array):
-        #   Instruction #1:
-        if group_tags[number] == -1:
-            group_tags[number] = number
-            group_phonebooks[number] = [number]
-        group_tag = group_tags[number]
+        # assert isinstance(group_tag, numpy.int32) == True
         assert group_tag > -1
 
         #   Instruction #3 (check only above):
-        for number_check in range(number, len(point_array)):
+        for number_check in range(point_number, len(point_array)):
             #   Instruction #2 (phonebook skipping):
-            if number_check not in group_phonebooks[group_tag]:         # assertion at line 162
+            if number_check not in group_phonebooks[group_tag]:         # assertion at line 170
                 #   Instruction #4 (range check):
                 if radius_sqr > dist_sqr(point_array[number_check], current_point):
-                    group_tags[number_check] = group_tag
-                    group_phonebooks[group_tag].append(number_check)    # assertion at line 162
+                    #   Instruction #5 (group merging):
+                    if group_tags[number_check] == -1:
+                        group_tags[number_check] = group_tag
+                        group_phonebooks[group_tag].append(number_check)    # assertion at line 170
+                    else:   #   Instruction #5 case=2.:
+                        # The checked point is already in a group, meaning that
+                        # now we have to update all the previously added data and merge it with the
+                        # aforementioned group of lover index name.
+                        new_group_tag = group_tags[number_check]
+
+                        assert isinstance(new_group_tag, np.int32)
+
+                        # Migrating all the current group's data to the found group's phonebook
+                        for migrating_point_number in group_phonebooks[group_tag]:
+                            group_phonebooks[new_group_tag].append(migrating_point_number)
+                            # WE HAVE TO MAKE A BETTER SYSTEM FOR DELETING DATA FROM PHONEBOOKS
+                            # del group_phonebooks[group_tag][migrating_point_number]
+
+                            # Changing individual tags for future computations
+                            group_tags[migrating_point_number] = new_group_tag
+
+                        # Swapping up the individual active group tag
+                        group_tag = group_tags[number_check]
 
     #   Converting to a list of lists of indexes:
     group_phonebooks = [values for key, values in group_phonebooks.items()]
+    # print(group_phonebooks); exit('done')
     return group_phonebooks
 
 
-
 def transform_img_by_field(image: np.array, field: np.array):
+    field = field.astype(np.int32)  # converting to int to allow index calling
     output = np.zeros(image.shape, np.uint8)    # output BGR image
     for y in range(image.shape[0]):
         for x in range(image.shape[1]):
             # again, no clue why the coordinates are swapped <,<
             y_, x_ = field[y, x, :2]
             try:
-                output[y + y_, x + x_] = image[y, x]
+                dy = y + y_
+                dx = x + x_
+                if dy < 0 or dx < 0:
+                    pass
+                output[dy, dx] = image[y, x]
             except IndexError:
                 pass
     return output
