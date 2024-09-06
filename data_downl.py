@@ -20,11 +20,12 @@ import data_analyser
 
 
 class DataHandler:
-    directory: str
-    filename: str
-    image: np.array
+    directory: str      # directory of the project
+    filename: str       # name of the currently main image
+    datapath: str       # a path to the data directory
+    image: np.array     # content of the currently main image
     edges: np.array
-    n_frames: int
+    n_frames: int       # amount of frames contained in the downloaded animation
 
     def __init__(self, directory: str = ''):
         # Correct formatting precaution
@@ -66,6 +67,7 @@ class DataHandler:
             infix2='_'
         )
         self.filename = filename
+        self.datapath = f'{self.directory}{self.filename}'
         return filename
 
     def download_data(self, url: str = None, filename: str = None):
@@ -272,7 +274,7 @@ class DataHandler:
             distances = data_analyser.arr_elements_distances(
                 stats2[:, :2],
                 np.asarray([x, y])
-            )
+            )  # data_analyser utility
             min_dist_index = np.argmin(distances)
 
             dA = round(stats2[min_dist_index][4] * 1000 / A)  # area change in promiles

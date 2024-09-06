@@ -73,8 +73,9 @@ def main():
             removed_count += 1
     print(f'[DONE] Removing {removed_count} null vectors.')
 
-    """ Adding a general direction to all vectors and dividing by 2 (to turn all of them kinda in
-        the same direction) """
+    """ Adding a general direction to all vectors and dividing by 2 
+        (to turn all of them kinda in the same direction):
+    """
 
     flow_vector_arr_mean = np.average(flow_vector_arr, axis=0)
     flow_vector_arr_mean[:2] = 0
@@ -88,8 +89,7 @@ def main():
 
     cv2.imwrite(f'{handler.directory}{handler.filename}[main_vectors].png', flow_lines_visual)
 
-
-    """ Saving the initial vector array: """
+    """ Saving the initial vector array as .npy: """
 
     with open(f'{handler.directory}{handler.filename}[main_vectors].npy', 'wb') as f:
         np.save(f, flow_vector_arr)
@@ -173,50 +173,53 @@ def main():
     del group
 
     # Testing how many of the main_vectors get assigned to a local group
-    print(index_tester.astype(np.int8))
+    # print(index_tester.astype(np.int8))
+    for i in group_data:
+        print(i)
+
     checker = np.zeros(flow_vector_arr.shape[0], np.uint16)
     for group in group_data:
         # print(group)
         for element in group:
             checker[element] += 1
     del group
-    print('>>>', flow_vector_arr.shape[0])
+    # print('>>>', flow_vector_arr.shape[0])
     # print(str(checker-1).replace('0', '.'))
 
     cv2.imwrite(f'{handler.directory}{handler.filename}[main_vectors](from npy).png', temp2)
 
-    # exit()
 
     """ Creating a vector field from initial vectors: """
     print('Interpolating data by distance...', end='\r')
     flow_vector_field = data_analyser.conquer_area_from_main_vectors(
-        data_handler=handler,
+        data_path=handler.datapath,
         shape=image0.shape[:2],
         main_vectors=flow_vector_arr
     )
     print('[DONE] Interpolating data by distance.')
 
     """ Transforming the last image by the generated flow vector field: """
-    # latest_image = cv2.imread(f'{handler.directory}{handler.filename}({handler.n_frames-1}).png')
+    latest_image = cv2.imread(f'{handler.directory}{handler.filename}({handler.n_frames-1}).png')
     # latest_image = cv2.imread(f'{handler.directory}{handler.filename}(lastframe).png')
-    latest_image = cv2.imread(f'grid.png')
+    # latest_image = cv2.imread(f'grid.png')
     latest_image = handler.rechannel_image(latest_image)
 
-    print('Generating the prediction...', end='\r')
-    next_image = data_analyser.transform_img_by_field(
-        image=latest_image,
-        field=flow_vector_field
-    )
-    print('[DONE] Generating the prediction.')
-    cv2.imwrite(f'{handler.directory}{handler.filename}(PREDICTION).png', next_image)
+    # print('Generating the prediction...', end='\r')
+    # next_image = data_analyser.transform_img_by_field(
+    #     image=latest_image,
+    #     field=flow_vector_field
+    # )
+    # print('[DONE] Generating the prediction.')
+    # cv2.imwrite(f'{handler.directory}{handler.filename}(PREDICTION).png', next_image)
 
-    print('Generating the prediction(2)...', end='\r')
-    next_image = data_analyser.transform_img_by_field(
-        image=next_image,
-        field=flow_vector_field*10
-    )
-    print('[DONE] Generating the prediction(2).')
-    cv2.imwrite(f'{handler.directory}{handler.filename}(PREDICTION2).png', next_image)
+    for repetition in range(1, 10):
+        print(f'Generating the prediction({repetition})...', end='\r')
+        next_image = data_analyser.transform_img_by_field(
+            image=latest_image,
+            field=flow_vector_field*1*repetition
+        )
+        print(f'[DONE] Generating the prediction({repetition}).')
+        cv2.imwrite(f'{handler.directory}{handler.filename}(PREDICTION{repetition}).png', next_image)
 
 
 
